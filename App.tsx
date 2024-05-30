@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Image } from 'react-native';
 import Scroller from './components/Scroller/Scroller.tsx'
 
 const App = () => {
@@ -9,13 +9,14 @@ const App = () => {
       <View style={styles.container}>
         <Scroller />
       </View>
+
       <View style={styles.navbar}>
-        <Text style={styles.navbarText}>Navbar</Text>
-        <Text style={styles.navbarText}>Navbar</Text>
-
-        <Text style={styles.navbarText}>Navbar</Text>
-
+        <Image source={require('./icons/home.png')} style={styles.icon} />
+        <Image source={require('./icons/search.png')} style={styles.icon} />
+        <Image source={require('./icons/record.png')} style={styles.icon} />
+        <Image source={require('./icons/profile.png')} style={styles.icon} />
       </View>
+
     </View>
   );
 };
@@ -30,16 +31,20 @@ const styles = StyleSheet.create({
   navbar: {
     height: '8%',
     backgroundColor: '#0e1111',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     display: 'flex',
     flexDirection: 'row',
-  },  
+  },
+  icon: {
+    width: 24,
+    height: 24,
+  },
   navbarText: {
     color: 'white',
-    marginRight: 5,
-    marginLeft: 5,
-  }  
+    marginRight: 2,
+    marginLeft: 2,
+  },
 });
 
 export default App;
