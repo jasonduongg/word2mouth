@@ -1,23 +1,35 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
-import Scroller from './components/Scroller/Scroller.tsx'
+import { View, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { enableScreens } from 'react-native-screens';
+
+import ScrollerScreen from './components/Screens/Scroller/Scroller.tsx';
+import RecordScreen from './components/Screens/Recorder/Recorder.tsx';
+import SearchScreen from './components/Screens/Search/Search.tsx';
+import ProfileScreen from './components/Screens/Profile/Profile.tsx';
+
+import NavigationBar from './components/NavigationBar/NavigationBar.tsx';
+
+enableScreens();
+
+const Stack = createNativeStackNavigator();
 
 const App = () => {
-
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.container}>
-        <Scroller />
+    <NavigationContainer>
+      <View style={styles.appContainer}>
+        <View style={styles.container}>
+          <Stack.Navigator initialRouteName="Home">
+            <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
+            <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
+            <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }} component={RecordScreen} />
+            <Stack.Screen name="Profile" options={{ headerShown: false, animation: "none" }} component={ProfileScreen} />
+          </Stack.Navigator>
+        </View>
+        <NavigationBar />
       </View>
-
-      <View style={styles.navbar}>
-        <Image source={require('./icons/home.png')} style={styles.icon} />
-        <Image source={require('./icons/search.png')} style={styles.icon} />
-        <Image source={require('./icons/record.png')} style={styles.icon} />
-        <Image source={require('./icons/profile.png')} style={styles.icon} />
-      </View>
-
-    </View>
+    </NavigationContainer>
   );
 };
 
@@ -27,23 +39,6 @@ const styles = StyleSheet.create({
   },
   container: {
     height: '92%',
-  },
-  navbar: {
-    height: '8%',
-    backgroundColor: '#0e1111',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    display: 'flex',
-    flexDirection: 'row',
-  },
-  icon: {
-    width: 24,
-    height: 24,
-  },
-  navbarText: {
-    color: 'white',
-    marginRight: 2,
-    marginLeft: 2,
   },
 });
 
