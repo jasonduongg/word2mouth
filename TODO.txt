@@ -1,0 +1,22 @@
+ideally:
+CRM -> value
+    appeal to smaller people too.
+
+
+RESTRAUNT -> WEBSITE
+CUSTOMER -> APP 
+
+
+
+CRM
+-> 
+-> orders
+    -> items
+    -> fulfilled
+-> content
+    -> video/image
+    -> description
+    -> orderes placeholder
+-> 
+
+
