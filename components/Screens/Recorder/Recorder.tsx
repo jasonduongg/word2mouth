@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Dimensions, TextInput } from 'react-native';
+
 import Video from 'react-native-video';
+import { Video as VideoCompress } from 'react-native-compressor';
+
 import { launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getStorage, ref, uploadBytes } from 'firebase/storage'; // Import Firebase Storage features
+import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'; // Import Firebase Storage features
 import { storage, firestore } from '../../config'; // Import your Firebase storage instance
 import { collection, addDoc, doc, setDoc} from 'firebase/firestore';
 
@@ -51,30 +54,53 @@ const ProfileScreen = () => {
 
   const uploadData = async () => {
     if (selectedMedia && selectedMedia.assets[0] && selectedMedia.assets[0].fileSize > 0) {
-      const mediaFile = selectedMedia.assets[0];
-      const response = await fetch(mediaFile.uri);
-      const blob = await response.blob();
-      const filename = `${Date.now()}_${mediaFile.fileName}`;
-      const storageRef = ref(storage, `media/${filename}`);
       
-      // Upload media file
-      uploadBytes(storageRef, blob)
-        .then(async (snapshot) => {
-          console.log('Upload successful');
-          
-          // After uploading media, add metadata to Firestore
-          await setMetadata({ ...metadata, filename }); // Set filename in metadata
-          const metadataCollectionRef = 'metadata'; // Replace 'metadata' with your actual collection name
-          await setMetadataInFirestore(metadataCollectionRef, metadata, filename);
-          
-          Alert.alert('Upload Success', 'Media uploaded successfully.');
-        })
-        .catch((error) => {
-          console.error('Error uploading:', error);
-          Alert.alert('Error', 'Failed to upload media.');
-        });
+      const filename = `${Date.now()}_${selectedMedia.assets[0].fileName}`;
+      const fileUri = selectedMedia.assets[0].uri;
+      const videoRef = ref(storage, `media/${filename}`);
+      const blob = await new Promise((resolve, reject) => {
+      
+      const compressedVideoUri = VideoCompress.compress(fileUri, {
+        quality: 'low', // You can adjust quality as needed
+        outputFormat: 'mp4', // Output format after compression
+      });
+      
+      const xhr = new XMLHttpRequest();
+      
+        xhr.onload = function () {
+          resolve(xhr.response);
+        };
+      
+        xhr.ontimeout = function (e) {    
+          console.log(e);
+        };
+        xhr.onerror = function (e) {
+          console.log(e);
+          reject(new TypeError("Network request failed"));
+        };
+        
+        xhr.responseType = "blob";
+        xhr.open("GET", fileUri, true);
+        xhr.timeout = 1000 * 60;
+        xhr.send(null);
+      });
+  
+      var uploadTask = uploadBytesResumable(videoRef, blob, metadata);
+  
+      uploadTask.then((snapshot) => {
+        // Handle successful uploads on complete
+        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+        setMetadataInFirestore('metadata_collection', metadata, filename);
+        blob.close();
+      }).catch((error) => {
+        console.log(error);
+        // Handle unsuccessful uploads
+        blob.close();
+      });
+
     }
   };
+  
 
   const setMetadataInFirestore = async (collectionRef, metadata, filename) => {
     console.log(collectionRef, metadata)

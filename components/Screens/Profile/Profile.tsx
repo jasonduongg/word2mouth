@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, Image} from 'react-native';
+import Video from 'react-native-video';
+
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config'; // Import your Firebase storage instance
 
@@ -18,6 +20,7 @@ const ProfileScreen = () => {
           videoList.push({ id: itemRef.name, url: downloadURL });
         }));
 
+        console.log(videoList)
         setVideos(videoList);
       } catch (error) {
         console.error('Error fetching videos:', error);
@@ -30,9 +33,16 @@ const ProfileScreen = () => {
 
   const renderVideoItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleVideoPress(item)}>
-      <View style={styles.videoContainer}>
-        <Image source={{ uri: 'Your placeholder image URL' }} style={styles.thumbnail} />
-        <Text style={styles.videoTitle}>{item.id}</Text>
+      <View style={styles.media}>
+        <Video
+            source={{ uri: item.url }}
+            style={styles.media}
+            paused={false}
+            repeat={true}
+            controls={false}
+            resizeMode="cover"
+            onError={(e) => console.log(e)}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -62,16 +72,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 8,
   },
-  videoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  thumbnail: {
-    width: 80,
-    height: 80,
-    marginRight: 8,
-    borderRadius: 8,
+  media: {
+    width: 100,
+    height: 200,
+    margin: 1,
+    backgroundColor: "red"
   },
   videoTitle: {
     fontSize: 18,
