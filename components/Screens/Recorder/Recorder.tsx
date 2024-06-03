@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Dimensions} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Dimensions, TextInput } from 'react-native';
 import Video from 'react-native-video';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getStorage, ref, uploadBytes } from 'firebase/storage'; // Import Firebase Storage features
-import { storage } from '../../config'; // Import your Firebase storage instance
-
+import { storage, firestore } from '../../config'; // Import your Firebase storage instance
+import { collection, addDoc, doc, setDoc} from 'firebase/firestore';
 
 const ProfileScreen = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [metadata, setMetadata] = useState({ description: '', likes: 0, comments: [] });
+
   useEffect(() => {
     // console.log("selectedMedia changed:", selectedMedia);
   }, [selectedMedia]);
@@ -48,29 +50,43 @@ const ProfileScreen = () => {
   }
 
   const uploadData = async () => {
-    
     if (selectedMedia && selectedMedia.assets[0] && selectedMedia.assets[0].fileSize > 0) {
       const mediaFile = selectedMedia.assets[0];
       const response = await fetch(mediaFile.uri);
       const blob = await response.blob();
       const filename = `${Date.now()}_${mediaFile.fileName}`;
-  
-      // Change per UUID
       const storageRef = ref(storage, `media/${filename}`);
-    
+      
+      // Upload media file
       uploadBytes(storageRef, blob)
-        .then((snapshot) => {
+        .then(async (snapshot) => {
           console.log('Upload successful');
-      })
+          
+          // After uploading media, add metadata to Firestore
+          await setMetadata({ ...metadata, filename }); // Set filename in metadata
+          const metadataCollectionRef = 'metadata'; // Replace 'metadata' with your actual collection name
+          await setMetadataInFirestore(metadataCollectionRef, metadata, filename);
+          
+          Alert.alert('Upload Success', 'Media uploaded successfully.');
+        })
         .catch((error) => {
           console.error('Error uploading:', error);
-      });
-
-      console.log("storageRef path:", storageRef.fullPath);
-      Alert.alert('Upload Success', 'Media uploaded successfully.');
+          Alert.alert('Error', 'Failed to upload media.');
+        });
     }
   };
 
+  const setMetadataInFirestore = async (collectionRef, metadata, filename) => {
+    console.log(collectionRef, metadata)
+    try {
+      // Add metadata document to the Firestore collection
+      await setDoc(doc(collection(firestore, collectionRef), filename), metadata);
+      console.log('Metadata saved in Firestore');
+    } catch (error) {
+      console.error('Error saving metadata:', error);
+      throw error; // Throw the error to handle it in the calling function if needed
+    }
+  };
   
 
   return (
@@ -83,14 +99,18 @@ const ProfileScreen = () => {
           <View>
             {selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('image') ? (
               <View>
-
                 <View style={styles.mediaContainer}>
                   <Image resizeMode="cover" source={{ uri: selectedMedia.assets[0].uri }} style={styles.media} />
                 </View>
-
+                <TextInput
+                  style={styles.input}
+                  placeholder="Description"
+                  value={metadata.description}
+                  onChangeText={(text) => setMetadata({ ...metadata, description: text })}
+                />
                 <TouchableOpacity onPress={() => uploadData()}>
-                    <Text style={styles.text}>Upload</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.text}>Upload</Text>
+                </TouchableOpacity>
               </View>
             ) : selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('video') ? (
               <View>
@@ -105,11 +125,16 @@ const ProfileScreen = () => {
                     onError={(e) => console.log(e)}
                   />
                 </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Description"
+                  value={metadata.description}
+                  onChangeText={(text) => setMetadata({ ...metadata, description: text })}
+                />
                 <TouchableOpacity onPress={() => uploadData()}>
                   <Text style={styles.text}>Upload</Text>
                 </TouchableOpacity>
               </View>
-
             ) : (
               <Text>No media selected</Text>
             )}
@@ -142,6 +167,14 @@ const styles = StyleSheet.create({
   media: {
     width: '100%',
     height: '100%',
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginVertical: 10,
+    paddingHorizontal: 10,
+    width: '80%',
   },
 });
 
