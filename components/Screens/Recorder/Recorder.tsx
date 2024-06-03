@@ -4,11 +4,14 @@ import Video from 'react-native-video';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getStorage, ref, uploadBytes } from 'firebase/storage'; // Import Firebase Storage features
+import { storage } from '../../config'; // Import your Firebase storage instance
+
 
 const ProfileScreen = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   useEffect(() => {
-    console.log("selectedMedia changed:", selectedMedia);
+    // console.log("selectedMedia changed:", selectedMedia);
   }, [selectedMedia]);
 
   function showMessage() {
@@ -44,29 +47,67 @@ const ProfileScreen = () => {
     // Ongoing implementation for opening the camera
   }
 
+  const uploadData = async () => {
+    
+    if (selectedMedia && selectedMedia.assets[0] && selectedMedia.assets[0].fileSize > 0) {
+      const mediaFile = selectedMedia.assets[0];
+      const response = await fetch(mediaFile.uri);
+      const blob = await response.blob();
+      const filename = `${Date.now()}_${mediaFile.fileName}`;
+  
+      // Change per UUID
+      const storageRef = ref(storage, `media/${filename}`);
+    
+      uploadBytes(storageRef, blob)
+        .then((snapshot) => {
+          console.log('Upload successful');
+      })
+        .catch((error) => {
+          console.error('Error uploading:', error);
+      });
+
+      console.log("storageRef path:", storageRef.fullPath);
+      Alert.alert('Upload Success', 'Media uploaded successfully.');
+    }
+  };
+
+  
+
   return (
     <View style={styles.container}>
       <SafeAreaView>
         <TouchableOpacity onPress={() => showMessage()}>
-          <Text style={styles.text}>Upload</Text>
+          <Text style={styles.text}>Choose Media</Text>
         </TouchableOpacity>
         {selectedMedia && (
           <View>
             {selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('image') ? (
-              <View style={styles.mediaContainer}>
-                <Image resizeMode="cover" source={{ uri: selectedMedia.assets[0].uri }} style={styles.media} />
+              <View>
+
+                <View style={styles.mediaContainer}>
+                  <Image resizeMode="cover" source={{ uri: selectedMedia.assets[0].uri }} style={styles.media} />
+                </View>
+
+                <TouchableOpacity onPress={() => uploadData()}>
+                    <Text style={styles.text}>Upload</Text>
+                  </TouchableOpacity>
               </View>
             ) : selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('video') ? (
-              <View style={styles.mediaContainer}>
-                <Video
-                  resizeMode="cover"
-                  source={{ uri: selectedMedia.assets[0].uri }}
-                  style={styles.media}
-                  paused={false}
-                  repeat={true}
-                  controls={false}
-                  onError={(e) => console.log(e)}
-                />
+              <View>
+                <View style={styles.mediaContainer}>
+                  <Video
+                    resizeMode="cover"
+                    source={{ uri: selectedMedia.assets[0].uri }}
+                    style={styles.media}
+                    paused={false}
+                    repeat={true}
+                    controls={false}
+                    onError={(e) => console.log(e)}
+                  />
+                </View>
+                <TouchableOpacity onPress={() => uploadData()}>
+                  <Text style={styles.text}>Upload</Text>
+                </TouchableOpacity>
               </View>
 
             ) : (
