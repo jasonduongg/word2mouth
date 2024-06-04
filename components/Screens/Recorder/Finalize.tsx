@@ -11,12 +11,9 @@ import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/sto
 import { storage, firestore } from '../../config'; // Import your Firebase storage instance
 import { collection, addDoc, doc, setDoc} from 'firebase/firestore';
 
-const ProfileScreen = () => {
+const FinalizeScreen = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [metadata, setMetadata] = useState({ description: '', likes: 0, comments: [], location: "", hashtags: ""});
-  const [finalizeStage, setFinalizeStage] = useState(false)
-  const [progressStage, setProgressStage] = useState(false)
-
+  const [metadata, setMetadata] = useState({ description: '', likes: 0, comments: [] });
 
   useEffect(() => {
     // console.log("selectedMedia changed:", selectedMedia);
@@ -46,7 +43,6 @@ const ProfileScreen = () => {
 
     launchImageLibrary(options, (response) => {
       if (!response.didCancel) {
-        setProgressStage(true)
         setSelectedMedia(response);
       }
     });
@@ -57,13 +53,7 @@ const ProfileScreen = () => {
   }
 
   const back = () => {
-    setProgressStage(false)
     setSelectedMedia(null)
-  }
-
-  const backfromFinal = () => {
-    setProgressStage(true)
-    setFinalizeStage(false)
   }
 
   const uploadData = async () => {
@@ -95,9 +85,6 @@ const ProfileScreen = () => {
       uploadTask.then((snapshot) => {
         // Handle successful uploads
         setMetadataInFirestore('metadata_collection', metadata, filename);
-        setFinalizeStage(false)
-        setProgressStage(false)
-        setSelectedMedia(null)
         blob.close();
       }).catch((error) => {
         console.log(error);
@@ -139,14 +126,24 @@ const ProfileScreen = () => {
       </View>
     );
   };
+  
+  
+  
+  
 
-  const renderProgress = () => {
-    console.log(selectedMedia)
-    return (
-      selectedMedia && (
-        <View>
-          {selectedMedia.assets[0] && (
-            selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('image') ? (
+  return (
+    <View style={styles.container}>
+        {!selectedMedia && (
+        <View style={styles.menu}>
+          <TouchableOpacity onPress={() => showMessage()}>
+            <Text style={styles.text}>Choose Media</Text>
+          </TouchableOpacity>
+        </View>
+       
+        )}
+        {selectedMedia && (
+          <View>
+            {selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('image') ? (
               <View>
                 <View style={styles.mediaContainer}>
                   <Image resizeMode="cover" source={{ uri: selectedMedia.assets[0].uri }} style={styles.media} />
@@ -164,101 +161,34 @@ const ProfileScreen = () => {
             ) : selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('video') ? (
               <View>
                 {renderItem({ item: selectedMedia.assets[0].uri, index: 0 })}
-                <View style={styles.backOverlay}>
-                  <SafeAreaView>
-                    <TouchableOpacity onPress={() => back()}>
-                      <View style={styles.backButton}>
-                        <Image source={require('./icons/back.png')} style={styles.icon} />
-                      </View>
-                    </TouchableOpacity>
-                  </SafeAreaView>
+                <View style = {styles.backOverlay}> 
+                <SafeAreaView>
+                  <TouchableOpacity onPress={() => back()}>
+                    <View style={styles.backButton}>
+                      <Image source={require('./icons/back.png')} style={styles.icon} />
+                    </View>
+                  </TouchableOpacity>
+                </SafeAreaView>
                 </View>
-                <View style={styles.proceed}>
-                  <TouchableOpacity onPress={() => { console.log("add: story function") }}>
+                <View style = {styles.proceed}>
+                  <TouchableOpacity onPress={() => uploadData()}>
                     <View style={styles.proceedButtons}>
                       <Text style={{ fontSize: 16, color: 'black', textAlign: 'center' }}>Story</Text>
                     </View>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { setFinalizeStage(true); setProgressStage(false); }}>
+                  <TouchableOpacity onPress={() => uploadData()}>
                     <View style={styles.proceedButtons}>
                       <Text style={{ fontSize: 16, color: 'black', textAlign: 'center' }}>Post</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
               </View>
+
             ) : (
               <Text>No media selected</Text>
-            )
-          )}
-        </View>
-      )
-    );
-  };
-  
-  const renderFinalize = () => {
-    return (
-      <View>
-        <TouchableOpacity onPress={() => backfromFinal()}>
-          <View style={styles.backButton}>
-            <Image source={require('./icons/back.png')} style={styles.icon} />
+            )}
           </View>
-        </TouchableOpacity>
-        <View style={styles.mediaContainer_final}>
-          <Video
-            resizeMode="cover"
-            source={{ uri: selectedMedia.assets[0].uri}}
-            style={styles.media_final}
-            paused={false}
-            repeat={true}
-            controls={false}
-            onError={(e) => console.log(e)}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text> Location </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Location"
-            value={metadata.location}
-            onChangeText={(text) => setMetadata({ ...metadata, location: text })}
-          />
-          <Text> Description </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Description"
-            value={metadata.description}
-            onChangeText={(text) => setMetadata({ ...metadata, description: text })}
-          />
-          <Text> Hashtags </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Hashtags"
-            value={metadata.hashtags}
-            onChangeText={(text) => setMetadata({ ...metadata, hashtags: text })}
-          />
-          <TouchableOpacity onPress={() => uploadData()}>
-            <Text style={styles.text}>Post</Text>
-          </TouchableOpacity>
-        </View>
-
-      </View>
-    );
-    
-  };
-  
-  
-  
-  return (
-    <View style={styles.container}>
-      {!selectedMedia && (
-        <View style={styles.menu}>
-          <TouchableOpacity onPress={() => showMessage()}>
-            <Text style={styles.text}>Choose Media</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      {progressStage && renderProgress()}
-      {finalizeStage && renderFinalize()}
+        )}
     </View>
   );
 };
@@ -272,6 +202,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    // backgroundColor: 'red',
     width: Dimensions.get('window').width * 1,
     height: Dimensions.get('window').height * 1,
   },
@@ -292,11 +223,11 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   input: {
-    height: "auto",
-    padding: 10,
+    height: Dimensions.get('window').height * 0.1,
     borderColor: 'gray',
     borderWidth: 1,
-    marginVertical: 1,
+    marginVertical: 10,
+    paddingHorizontal: 10,
     width: '100%',
   },
   restaurant: {
@@ -330,19 +261,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   
   },
-
-  mediaContainer_final: {
-    marginTop: 5,
-    width: Dimensions.get('window').width * 1,
-    height: Dimensions.get('window').width * 0.35,
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    paddingLeft: 25
-  },
-  media_final: {
-    width: '35%',
-    height: '100%',
-  },
 });
 
-export default ProfileScreen;
+export default FinalizeScreen;

@@ -66,7 +66,9 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    width: Dimensions.get('window').width * 0.92,
+    height: Dimensions.get('window').height * 0.92, // must be the same size as parent 
+    backgroundColor: 'red',
   },
   videoList: {
     paddingVertical: 16,
@@ -74,7 +76,7 @@ const styles = StyleSheet.create({
   },
   media: {
     width: 100,
-    height: 200,
+    height: Dimensions.get('window').height * 0.92, // must be the same size as parent 
     margin: 1,
     backgroundColor: "red"
   },
