@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, Image} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Image, ScrollView} from 'react-native';
 import Video from 'react-native-video';
 
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config'; // Import your Firebase storage instance
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ProfileData from '../../ProfileData/ProfileData';
+import MultiuseButton from '../../MultiuseButton/MultiuseButton';
 
 const ProfileScreen = () => {
   const [videos, setVideos] = useState([]);
@@ -31,21 +34,23 @@ const ProfileScreen = () => {
     fetchVideos();
   }, []);
 
-  const renderVideoItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleVideoPress(item)}>
-      <View style={styles.media}>
-        <Video
-            source={{ uri: item.url }}
-            style={styles.media}
-            paused={false}
-            repeat={true}
-            controls={false}
-            resizeMode="cover"
-            onError={(e) => console.log(e)}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+  const renderVideoItems = () => {
+    return videos.map((video, index) => (
+      <TouchableOpacity key={video.id} onPress={() => handleVideoPress(video)}>
+        <View style={styles.videoContainer}>
+          <Video
+              source={{ uri: video.url }}
+              style={styles.media}
+              paused={false}
+              repeat={true}
+              controls={false}
+              resizeMode="cover"
+              onError={(e) => console.log(e)}
+          />
+        </View>
+      </TouchableOpacity>
+    ));
+  };
 
   const handleVideoPress = (video) => {
     // Handle video press, for example, navigate to a video player screen
@@ -53,37 +58,72 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={videos}
-        renderItem={renderVideoItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.videoList}
-      />
+      <SafeAreaView>
+        <ScrollView style={styles.scroll}>
+          <View style={styles.profileHeading}>
+            <View style={styles.profilePicture}>
+            </View>
+            <Text style={styles.profileName}>@iamsaerom</Text>
+            <View style={{ marginVertical: 10 }}>
+              <ProfileData ></ProfileData>
+            </View>
+            <View style={styles.profileButtons}>
+              <MultiuseButton text={"Follow"}></MultiuseButton>
+              <MultiuseButton text={"Share Profile"}></MultiuseButton>
+            </View>
+          </View>
+
+          <View style={styles.content}>
+            {renderVideoItems()}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  profileHeading: {
+    alignItems: 'center',
+  },
+  profilePicture: {
+    marginTop: 15,
+    backgroundColor: 'green',
+    width: 96,
+    height: 96,
+  },
+  profileButtons: {
+    marginTop: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '50%'
+  },
+  profileName: {
+    marginTop: 5,
+    fontSize: 18
+  },
   container: {
     flex: 1,
-    width: Dimensions.get('window').width * 0.92,
-    height: Dimensions.get('window').height * 0.92, // must be the same size as parent 
+    width: Dimensions.get('window').width * 1,
+  },
+  scroll: {
+    height: '100%',
+  },
+  content: {
+    marginTop: 25,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  videoContainer: {
+    width: Dimensions.get('window').width * 0.3,
+    height: Dimensions.get('window').width * 0.3,
+    margin: 4,
     backgroundColor: 'red',
   },
-  videoList: {
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-  },
   media: {
-    width: 100,
-    height: Dimensions.get('window').height * 0.92, // must be the same size as parent 
-    margin: 1,
-    backgroundColor: "red"
-  },
-  videoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    flex: 1,
+    backgroundColor: 'red',
   },
 });
 
