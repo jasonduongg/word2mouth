@@ -2,14 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, PanResponder, Dimensions, StyleSheet, Animated, FlatList, Text, Image } from 'react-native';
 import Video from 'react-native-video';
 
+import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../config'; // Import your Firebase storage instance
+
 const Scroller = () => {
-  const videos = [
-    require('../../videos/test_video1.mp4'),
-    require('../../videos/test_video2.mp4'),
-    require('../../videos/test_video3.mp4'),
-    require('../../videos/test_video4.mp4'),
-    require('../../videos/test_video5.mp4')
-  ];
+  const [videos, setVideos] = useState([]);
 
   const [videoIndex, setVideoIndex] = useState(0);
   const pan = useRef(new Animated.ValueXY()).current;
@@ -17,6 +14,29 @@ const Scroller = () => {
   useEffect(() => {
     console.log(`Current video index: ${videoIndex}`);
   }, [videoIndex]);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const videoList = [];
+        const storageRef = ref(storage, 'media'); // Change this to the path where your videos are stored
+        const listResult = await listAll(storageRef);
+
+        await Promise.all(listResult.items.map(async (itemRef) => {
+          const downloadURL = await getDownloadURL(itemRef);
+          videoList.push({ id: itemRef.name, url: downloadURL });
+        }));
+
+        console.log(videoList)
+        setVideos(videoList);
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+        Alert.alert('Error', 'Failed to fetch videos. Please try again later.');
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   const changeVideoThreshold = 200;
 
@@ -48,7 +68,7 @@ const Scroller = () => {
   const renderItem = ({ item, index }) => (
     <View style={styles.videoWrapper}>
       <Video
-        source={item}
+        source={{ uri: item.url }}
         paused={index !== videoIndex}
         repeat={true}
         resizeMode="cover"

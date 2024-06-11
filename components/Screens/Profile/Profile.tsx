@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
     height: Dimensions.get('window').width * 0.3,
     margin: 4,
     backgroundColor: 'red',
+
   },
   media: {
     flex: 1,
