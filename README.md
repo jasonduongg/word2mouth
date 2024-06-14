@@ -23,7 +23,7 @@ To get started with Pocket Pokemon, follow these steps:
 2. Navigate to the project directory:
 
     ```bash
-    cd pocketPokemon
+    cd BlindChess
     ```
 
 3. Install dependencies:
@@ -68,17 +68,11 @@ To get started with Pocket Pokemon, follow these steps:
     npm run ios --simulator="iPhone {#}”
     ```
 
-### Usage
-
-- Follow the on-screen instructions to engage in Pokemon battles.
-- Use the provided buttons to attack, switch Pokemon, or use special moves.
 
 ### Contributing
 
-Contributions to Pocket Pokemon are welcome! Please fork the repository, make your changes, and submit a pull request.
+As of now the sole contributor to this project's development is Jason Duong
 
 ### License
 
 This project is licensed under the [MIT License](LICENSE).
-# word2mouth
-# word2mouth
