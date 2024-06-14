@@ -17,13 +17,13 @@ To get started with Pocket Pokemon, follow these steps:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/jasonduongg/pocketPokemon
+    git clone https://github.com/jasonduongg/word2mouth
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd BlindChess
+    cd {filename}
     ```
 
 3. Install dependencies:
@@ -59,11 +59,11 @@ To get started with Pocket Pokemon, follow these steps:
 
 3. Open new terminal
     ```bash
-    cd pocketPoke
+    cd {filename}
     npm run ios --simulator="iPhone {#}”
     ```
 
-4. Hover the simulator, on top left click on File => New device, pick one that is not running
+4. To run a second simulator, hover the simulator, on top left click on File => New device, pick one that is not running 
     ```bash
     npm run ios --simulator="iPhone {#}”
     ```
