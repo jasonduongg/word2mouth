@@ -1,15 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Image, ScrollView} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Image, ScrollView, Button} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import Video from 'react-native-video';
 
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../config'; // Import your Firebase storage instance
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { storage } from '../../config';
+import auth from '@react-native-firebase/auth'; 
+
+//Components
 import ProfileData from '../../ProfileData/ProfileData';
 import MultiuseButton from '../../MultiuseButton/MultiuseButton';
 
-const ProfileScreen = () => {
+
+const ProfileScreen = ({onLogin}) => {
   const [videos, setVideos] = useState([]);
+
+  const handleLogout = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        await auth().signOut(); // Sign out the user
+        onLogin(false); // Notify parent component of logout
+      } else {
+        console.warn('No user currently signed in.');
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -59,6 +79,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <SafeAreaView>
+        <Button title="Logout" onPress={handleLogout} />
         <ScrollView style={styles.scroll}>
           <View style={styles.profileHeading}>
             <View style={styles.profilePicture}>
