@@ -19,18 +19,22 @@ const EnterPhoneNumberScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Enter Your Phone Number</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your phone number"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        keyboardType="phone-pad"
-      />
-      <Button
-        title="Send Verification Code"
-        onPress={signInWithPhoneNumber}
-      />
+        <Text style={styles.text}>Enter Your Phone Number</Text>
+        <Button
+            title="Back"
+            onPress={() => navigation.goBack()}
+        />
+        <TextInput
+            style={styles.input}
+            placeholder="Enter your phone number"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+        />
+        <Button
+            title="Send Verification Code"
+            onPress={signInWithPhoneNumber}
+        />
     </View>
   );
 };

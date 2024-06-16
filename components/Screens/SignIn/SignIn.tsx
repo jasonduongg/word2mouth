@@ -5,7 +5,6 @@ import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } fr
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useNavigation } from '@react-navigation/native';
-import EnterPhoneNumberScreen from '../../PhoneLoginFlow/EnterPhoneNumber.tsx'; // Import the new screen component
 
 const SignInScreen = ({ onLogin }) => {
   const navigation = useNavigation();
@@ -23,9 +22,10 @@ const SignInScreen = ({ onLogin }) => {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const googleCredential = auth.GoogleAuthProvider.credential(userInfo.idToken);
-      await auth().signInWithCredential(googleCredential);
-      setUserId(userInfo.user.id);
-      onLogin(true); // Notify parent component of successful login
+      const userCredential = await auth().signInWithCredential(googleCredential);
+      console.log(userCredential.user.uid)
+      setUserId(userCredential.user.uid);
+      onLogin(true, userCredential.user.uid); // Notify parent component of successful login
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log('User cancelled the login flow');
@@ -51,6 +51,9 @@ const SignInScreen = ({ onLogin }) => {
       setConfirmation(confirmationResult);
       setPhoneNumber(phoneNumber);
       Alert.alert('Verification code sent to ' + phoneNumber);
+      navigation.navigate('EnterVerificationCode', {
+        confirmation: confirmationResult
+      });
     } catch (error) {
       console.log('Error sending verification code:', error);
       Alert.alert('Error sending verification code. Please try again.');
@@ -59,9 +62,9 @@ const SignInScreen = ({ onLogin }) => {
 
   const confirmCode = async () => {
     try {
-      await confirmation.confirm(code);
-      setUserId(auth().currentUser.uid);
-      onLogin(true); // Notify parent component of successful login
+      const userCredential = await confirmation.confirm(code);
+      setUserId(userCredential.user.uid);
+      onLogin(true, userCredential.user.uid); // Notify parent component of successful login
     } catch (error) {
       console.log('Invalid code:', error);
       Alert.alert('Invalid code. Please try again.');

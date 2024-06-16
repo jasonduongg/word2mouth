@@ -12,7 +12,7 @@ const Scroller = () => {
   const pan = useRef(new Animated.ValueXY()).current;
 
   useEffect(() => {
-    console.log(`Current video index: ${videoIndex}`);
+    // console.log(`Current video index: ${videoIndex}`);
   }, [videoIndex]);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const Scroller = () => {
           videoList.push({ id: itemRef.name, url: downloadURL });
         }));
 
-        console.log(videoList)
+        // console.log(videoList)
         setVideos(videoList);
       } catch (error) {
         console.error('Error fetching videos:', error);

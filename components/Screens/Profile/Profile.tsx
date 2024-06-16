@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, Image, ScrollView, Button} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Button } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import Video from 'react-native-video';
-
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../config';
-import auth from '@react-native-firebase/auth'; 
+import { firestore, storage } from '../../config';
+import auth from '@react-native-firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
-//Components
+// Components
 import ProfileData from '../../ProfileData/ProfileData';
 import MultiuseButton from '../../MultiuseButton/MultiuseButton';
 
-
-const ProfileScreen = ({onLogin}) => {
+const ProfileScreen = ({ userId, userData, onLogin }) => {
   const [videos, setVideos] = useState([]);
+  const [userProfileData, setUserProfileData] = useState(userData);
 
   const handleLogout = async () => {
     try {
@@ -30,42 +29,62 @@ const ProfileScreen = ({onLogin}) => {
     }
   };
 
+  const fetchVideos = async () => {
+    try {
+      const videoList = [];
+      const storageRef = ref(storage, 'media'); // Change this to the path where your videos are stored
+      const listResult = await listAll(storageRef);
+
+      await Promise.all(listResult.items.map(async (itemRef) => {
+        const downloadURL = await getDownloadURL(itemRef);
+        videoList.push({ id: itemRef.name, url: downloadURL });
+      }));
+
+      console.log(videoList)
+      setVideos(videoList);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      Alert.alert('Error', 'Failed to fetch videos. Please try again later.');
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const userDocRef = doc(firestore, 'usersData', userId);
+      const userSnapshot = await getDoc(userDocRef);
+
+      if (userSnapshot.exists()) {
+        setUserProfileData(userSnapshot.data());
+      } else {
+        console.error('User data does not exist');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data. Please try again later.');
+    }
+  };
+
+  const refreshData = async () => {
+    await fetchUserData();
+    await fetchVideos();
+  };
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const videoList = [];
-        const storageRef = ref(storage, 'media'); // Change this to the path where your videos are stored
-        const listResult = await listAll(storageRef);
-
-        await Promise.all(listResult.items.map(async (itemRef) => {
-          const downloadURL = await getDownloadURL(itemRef);
-          videoList.push({ id: itemRef.name, url: downloadURL });
-        }));
-
-        console.log(videoList)
-        setVideos(videoList);
-      } catch (error) {
-        console.error('Error fetching videos:', error);
-        Alert.alert('Error', 'Failed to fetch videos. Please try again later.');
-      }
-    };
-
     fetchVideos();
   }, []);
 
   const renderVideoItems = () => {
-    return videos.map((video, index) => (
+    return videos.map((video) => (
       <TouchableOpacity key={video.id} onPress={() => handleVideoPress(video)}>
         <View style={styles.videoContainer}>
           <Video
-              source={{ uri: video.url }}
-              style={styles.media}
-              paused={false}
-              repeat={true}
-              controls={false}
-              resizeMode="cover"
-              onError={(e) => console.log(e)}
+            source={{ uri: video.url }}
+            style={styles.media}
+            paused={false}
+            repeat={true}
+            controls={false}
+            resizeMode="cover"
+            onError={(e) => console.log(e)}
           />
         </View>
       </TouchableOpacity>
@@ -80,20 +99,19 @@ const ProfileScreen = ({onLogin}) => {
     <View style={styles.container}>
       <SafeAreaView>
         <Button title="Logout" onPress={handleLogout} />
+        <Button title="Refresh" onPress={refreshData} />
         <ScrollView style={styles.scroll}>
           <View style={styles.profileHeading}>
-            <View style={styles.profilePicture}>
-            </View>
-            <Text style={styles.profileName}>@iamsaerom</Text>
+            <View style={styles.profilePicture}></View>
+            <Text style={styles.profileName}>{userProfileData.username}</Text>
             <View style={{ marginVertical: 10 }}>
-              <ProfileData ></ProfileData>
+              <ProfileData follower={userProfileData.followers} following={userProfileData.following} />
             </View>
             <View style={styles.profileButtons}>
-              <MultiuseButton text={"Follow"}></MultiuseButton>
-              <MultiuseButton text={"Share Profile"}></MultiuseButton>
+              <MultiuseButton text={"Follow"} />
+              <MultiuseButton text={"Share Profile"} />
             </View>
           </View>
-
           <View style={styles.content}>
             {renderVideoItems()}
           </View>
@@ -117,11 +135,11 @@ const styles = StyleSheet.create({
     marginTop: 5,
     flexDirection: 'row',
     justifyContent: 'center',
-    width: '50%'
+    width: '50%',
   },
   profileName: {
     marginTop: 5,
-    fontSize: 18
+    fontSize: 18,
   },
   container: {
     flex: 1,
@@ -141,7 +159,6 @@ const styles = StyleSheet.create({
     height: Dimensions.get('window').width * 0.3,
     margin: 4,
     backgroundColor: 'red',
-
   },
   media: {
     flex: 1,

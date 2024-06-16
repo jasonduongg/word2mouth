@@ -4,7 +4,7 @@
     "target": "es5",
     "module": "commonjs",
     "lib": ["dom", "es2015"],
-    "jsx": "react", 
+    "jsx": "react",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,4 +15,4 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*"]
-},
+}
