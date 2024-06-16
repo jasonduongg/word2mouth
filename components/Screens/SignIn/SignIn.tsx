@@ -1,9 +1,14 @@
+// SignInScreen.js
+
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { useNavigation } from '@react-navigation/native';
+import EnterPhoneNumberScreen from '../../PhoneLoginFlow/EnterPhoneNumber.tsx'; // Import the new screen component
 
 const SignInScreen = ({ onLogin }) => {
+  const navigation = useNavigation();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [confirmation, setConfirmation] = useState(null);
   const [code, setCode] = useState('');
@@ -34,54 +39,50 @@ const SignInScreen = ({ onLogin }) => {
     }
   };
 
-  const signInWithPhoneNumber = async () => {
+  const navigateToPhoneNumberInput = () => {
+    navigation.navigate('EnterPhoneNumber', {
+      onSendVerificationCode: sendVerificationCode
+    });
+  };
+
+  const sendVerificationCode = async (phoneNumber) => {
     try {
-      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-      setConfirmation(confirmation);
-      Alert.alert('Verification code sent to your phone.');
+      const confirmationResult = await auth().signInWithPhoneNumber(phoneNumber);
+      setConfirmation(confirmationResult);
+      setPhoneNumber(phoneNumber);
+      Alert.alert('Verification code sent to ' + phoneNumber);
     } catch (error) {
-      console.error('Error sending code:', error);
-      Alert.alert('Error', 'Failed to send verification code.');
+      console.log('Error sending verification code:', error);
+      Alert.alert('Error sending verification code. Please try again.');
     }
   };
 
   const confirmCode = async () => {
     try {
       await confirmation.confirm(code);
-      Alert.alert('Success', 'You have been successfully authenticated.');
-      const user = auth().currentUser;
-      if (user) {
-        setUserId(user.uid);
-        onLogin(true); // Notify parent component of successful login
-      }
+      setUserId(auth().currentUser.uid);
+      onLogin(true); // Notify parent component of successful login
     } catch (error) {
-      console.error('Invalid code.', error);
-      Alert.alert('Error', 'Invalid verification code.');
+      console.log('Invalid code:', error);
+      Alert.alert('Invalid code. Please try again.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Sign In Page</Text>
+      <Text style={styles.text}>Login to W2M</Text>
       {!confirmation ? (
         <View>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your phone number"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-          />
-          <Button
-            title="Send Verification Code"
-            onPress={signInWithPhoneNumber}
-          />
-          <GoogleSigninButton
-            style={{ width: 192, height: 48 }}
-            size={GoogleSigninButton.Size.Wide}
-            color={GoogleSigninButton.Color.Dark}
-            onPress={googleLogin}
-          />
+          <TouchableOpacity onPress={navigateToPhoneNumberInput}>
+            <View style={styles.button}>
+              <Text>Login with Phone Number</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={googleLogin}>
+            <View style={styles.button}>
+              <Text>Login with Google</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       ) : (
         <View>
@@ -103,6 +104,13 @@ const SignInScreen = ({ onLogin }) => {
 };
 
 const styles = StyleSheet.create({
+  button: {
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',

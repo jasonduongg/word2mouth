@@ -1,3 +1,5 @@
+// App.js
+
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,7 +9,10 @@ import ScrollerScreen from './components/Screens/Scroller/Scroller.tsx';
 import RecordScreen from './components/Screens/Recorder/Recorder.tsx';
 import SearchScreen from './components/Screens/Search/Search.tsx';
 import ProfileScreen from './components/Screens/Profile/Profile.tsx';
+
 import SignInScreen from './components/Screens/SignIn/SignIn.tsx'; // Assuming SignInScreen handles authentication
+import EnterPhoneNumberScreen from './components/PhoneLoginFlow/EnterPhoneNumber.tsx'; // Phone number verification screen
+import EnterVerificationCodeScreen from './components/PhoneLoginFlow/EnterVerificationCode.tsx'; // Verification code screen
 
 import NavigationBar from './components/NavigationBar/NavigationBar.tsx';
 
@@ -37,7 +42,15 @@ const App = () => {
               <NavigationBar />
             </View>
           ) : (
-            <SignInScreen onLogin={handleLogin} />
+            <Stack.Navigator initialRouteName="SignIn">
+              <Stack.Screen name="SignIn" options={{ headerShown: false }} >
+                {props => <SignInScreen {...props} onLogin={handleLogin} />}
+              </Stack.Screen>
+              <Stack.Screen name="EnterPhoneNumber" component={EnterPhoneNumberScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="EnterVerificationCode" options={{ headerShown: false }}>
+                {props => <EnterVerificationCodeScreen {...props} onLogin={handleLogin} />}
+              </Stack.Screen>
+            </Stack.Navigator>
           )}
         </View>
       </View>
