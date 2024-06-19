@@ -1,42 +1,51 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, PanResponder, Dimensions, StyleSheet, Animated, FlatList, Text, Image } from 'react-native';
+import { View, PanResponder, Dimensions, StyleSheet, Animated, FlatList, Text, Image, Alert, Button } from 'react-native';
 import Video from 'react-native-video';
-
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../config'; // Import your Firebase storage instance
+import { firestore, storage } from '../../config'; // Import your Firebase Firestore instance
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 const Scroller = () => {
   const [videos, setVideos] = useState([]);
-
   const [videoIndex, setVideoIndex] = useState(0);
   const pan = useRef(new Animated.ValueXY()).current;
 
   useEffect(() => {
-    // console.log(`Current video index: ${videoIndex}`);
-  }, [videoIndex]);
-
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const videoList = [];
-        const storageRef = ref(storage, 'media'); // Change this to the path where your videos are stored
-        const listResult = await listAll(storageRef);
-
-        await Promise.all(listResult.items.map(async (itemRef) => {
-          const downloadURL = await getDownloadURL(itemRef);
-          videoList.push({ id: itemRef.name, url: downloadURL });
-        }));
-
-        // console.log(videoList)
-        setVideos(videoList);
-      } catch (error) {
-        console.error('Error fetching videos:', error);
-        Alert.alert('Error', 'Failed to fetch videos. Please try again later.');
-      }
-    };
-
     fetchVideos();
   }, []);
+
+  const fetchVideos = async () => {
+    try {
+      const videoList = [];
+      const metadataList = [];
+      const storageRef = ref(storage, 'media'); // Change this to the path where your videos are stored
+      const listResult = await listAll(storageRef);
+
+      await Promise.all(listResult.items.map(async (itemRef) => {
+        const downloadURL = await getDownloadURL(itemRef);
+        videoList.push({ id: itemRef.name, url: downloadURL });
+      }));
+
+      const metadataSnapshot = await getDocs(collection(firestore, 'metadata_collection'));
+      metadataSnapshot.forEach((doc) => {
+        metadataList.push({ id: doc.id, ...doc.data() });
+      });
+
+      const combinedList = await Promise.all(videoList.map(async (video) => {
+        const metadata = metadataList.find(meta => meta.id === video.id) || {};
+        const userDocRef = doc(firestore, 'usersData', metadata.ownerId);
+        const userSnapshot = await getDoc(userDocRef);
+        const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+        console.log(userData)
+        return { ...video, ...metadata, username: userData.username || 'Unknown' };
+      }));
+
+      setVideos(combinedList);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      Alert.alert('Error', 'Failed to fetch videos. Please try again later.');
+    }
+  };
 
   const changeVideoThreshold = 200;
 
@@ -76,15 +85,13 @@ const Scroller = () => {
         onError={(e) => console.log(e)}
       />
       <View style={styles.overlayTextContainer}>
-        <Text style={styles.overlayText_creator}>iamsaerom [8.7]</Text>
-        <Text style={styles.overlayText_menu}>Chicken and Waffles - KFC</Text>
-        <Text style={styles.overlayText_description}>Just tried a new menu item from KFC, would get again</Text>
+        <Text style={styles.overlayText_creator}>{item.username}</Text>
+        <Text style={styles.overlayText_menu}>{item.location || 'Error: Location'}</Text>
+        <Text style={styles.overlayText_description}>{item.description || 'No description available'}</Text>
         <View style={styles.overlayStarContainer}>
-          <Image source={require('./icons/star.png')} style={styles.star} />
-          <Image source={require('./icons/star.png')} style={styles.star} />
-          <Image source={require('./icons/star.png')} style={styles.star} />
-          <Image source={require('./icons/star.png')} style={styles.star} />
-          <Image source={require('./icons/star.png')} style={styles.star} />
+          {[...Array(5)].map((_, i) => (
+            <Image key={i} source={require('./icons/star.png')} style={styles.star} />
+          ))}
         </View>
       </View>
       
@@ -94,7 +101,6 @@ const Scroller = () => {
         <Image source={require('./icons/share.png')} style={styles.icon} />
         <Image source={require('./icons/bookmark.png')} style={styles.icon} />
         <Image source={require('./icons/order.png')} style={styles.icon} />
-
       </View>
     </View>
   );
@@ -125,6 +131,9 @@ const Scroller = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   videoWrapper: {
     width: '100%',
     height: Dimensions.get('window').height * 0.92, // must be the same size as parent 
@@ -196,6 +205,3 @@ const styles = StyleSheet.create({
 });
 
 export default Scroller;
-
-
-

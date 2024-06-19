@@ -3,17 +3,18 @@ import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import ScrollerScreen from './components/Screens/Scroller/Scroller.tsx';
-import RecordScreen from './components/Screens/Recorder/Recorder.tsx';
-import SearchScreen from './components/Screens/Search/Search.tsx';
-import ProfileScreen from './components/Screens/Profile/Profile.tsx';
-import SignInScreen from './components/Screens/SignIn/SignIn.tsx'; // Assuming SignInScreen handles authentication
-import EnterPhoneNumberScreen from './components/PhoneLoginFlow/EnterPhoneNumber.tsx'; // Phone number verification screen
-import EnterVerificationCodeScreen from './components/PhoneLoginFlow/EnterVerificationCode.tsx'; // Verification code screen
-import SetupProfileScreen from './components/PhoneLoginFlow/SetupProfile.tsx'; // Profile setup screen
+import ScrollerScreen from './components/Screens/Scroller/Scroller';
+import RecordScreen from './components/Screens/Recorder/Recorder';
+import SearchScreen from './components/Screens/Search/Search';
+import ProfileScreen from './components/Screens/Profile/Profile';
+import OtherProfile from './components/OtherProfile/OtherProfile';
+import SignInScreen from './components/Screens/SignIn/SignIn'; // Assuming SignInScreen handles authentication
+import EnterPhoneNumberScreen from './components/PhoneLoginFlow/EnterPhoneNumber'; // Phone number verification screen
+import EnterVerificationCodeScreen from './components/PhoneLoginFlow/EnterVerificationCode'; // Verification code screen
+import SetupProfileScreen from './components/PhoneLoginFlow/SetupProfile'; // Profile setup screen
 
-import NavigationBar from './components/NavigationBar/NavigationBar.tsx';
-import { firestore } from './components/config.jsx'; // Adjust the path as needed
+import NavigationBar from './components/NavigationBar/NavigationBar';
+import { firestore } from './components/config'; // Adjust the path as needed
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const Stack = createNativeStackNavigator();
@@ -68,8 +69,9 @@ const App = () => {
                 <Stack.Navigator initialRouteName="Home">
                   <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
                   <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
+                  <Stack.Screen name="OtherProfile" options={{ headerShown: false, animation: "none" }} component={OtherProfile} />
                   <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }}>
-                    {props => <RecordScreen {...props} userId={userId}  />}
+                    {props => <RecordScreen {...props} userId={userId} />}
                   </Stack.Screen>
                   <Stack.Screen name="Profile" options={{ headerShown: false, animation: "none" }}>
                     {props => <ProfileScreen {...props} userId={userId} userData={userData} onLogin={handleLogin} />}

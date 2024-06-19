@@ -3,32 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
-import { firestore, storage } from '../../config';
-import auth from '@react-native-firebase/auth';
+import { firestore, storage } from '../config';
 import { doc, getDoc } from 'firebase/firestore';
 
 // Components
-import ProfileData from '../../ProfileData/ProfileData';
-import MultiuseButton from '../../MultiuseButton/MultiuseButton';
+import ProfileData from '../ProfileData/ProfileData';
+import MultiuseButton from '../MultiuseButton/MultiuseButton';
 
-const ProfileScreen = ({ userId, userData, onLogin }) => {
+const OtherProfile = ({ route }) => {
+  const { userId } = route.params;
   const [videos, setVideos] = useState([]);
-  const [userProfileData, setUserProfileData] = useState(userData);
+  const [userProfileData, setUserProfileData] = useState({});
   const [userVideos, setUserVideos] = useState([]);
-
-  const handleLogout = async () => {
-    try {
-      const currentUser = auth().currentUser;
-      if (currentUser) {
-        await auth().signOut(); // Sign out the user
-        onLogin(false); // Notify parent component of logout
-      } else {
-        console.warn('No user currently signed in.');
-      }
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
 
   const fetchVideos = async () => {
     try {
@@ -41,7 +27,6 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
         videoList.push({ id: itemRef.name, url: downloadURL });
       }));
 
-      console.log(videoList)
       setVideos(videoList);
     } catch (error) {
       console.error('Error fetching videos:', error);
@@ -103,7 +88,6 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
   return (
     <View style={styles.container}>
       <SafeAreaView>
-        <Button title="Logout" onPress={handleLogout} />
         <Button title="Refresh" onPress={refreshData} />
         <ScrollView style={styles.scroll}>
           <View style={styles.profileHeading}>
@@ -113,8 +97,9 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
               <ProfileData follower={userProfileData.followers} following={userProfileData.following} />
             </View>
             <View style={styles.profileButtons}>
-              <MultiuseButton text={"Edit"} />
-              <MultiuseButton text={"Share Profile"} />
+              <MultiuseButton text={"Follow"} />
+              <MultiuseButton text={"Connect"} />
+              <MultiuseButton text={"v"} />
             </View>
           </View>
           <View style={styles.content}>
@@ -171,4 +156,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileScreen;
+export default OtherProfile;
