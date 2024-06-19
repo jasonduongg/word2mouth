@@ -14,6 +14,7 @@ import MultiuseButton from '../../MultiuseButton/MultiuseButton';
 const ProfileScreen = ({ userId, userData, onLogin }) => {
   const [videos, setVideos] = useState([]);
   const [userProfileData, setUserProfileData] = useState(userData);
+  const [userVideos, setUserVideos] = useState([]);
 
   const handleLogout = async () => {
     try {
@@ -54,7 +55,9 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
       const userSnapshot = await getDoc(userDocRef);
 
       if (userSnapshot.exists()) {
-        setUserProfileData(userSnapshot.data());
+        const userData = userSnapshot.data();
+        setUserProfileData(userData);
+        setUserVideos(userData.posts || []); // Fetch user video list from user data
       } else {
         console.error('User data does not exist');
       }
@@ -70,25 +73,27 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
   };
 
   useEffect(() => {
-    fetchVideos();
+    refreshData();
   }, []);
 
   const renderVideoItems = () => {
-    return videos.map((video) => (
-      <TouchableOpacity key={video.id} onPress={() => handleVideoPress(video)}>
-        <View style={styles.videoContainer}>
-          <Video
-            source={{ uri: video.url }}
-            style={styles.media}
-            paused={false}
-            repeat={true}
-            controls={false}
-            resizeMode="cover"
-            onError={(e) => console.log(e)}
-          />
-        </View>
-      </TouchableOpacity>
-    ));
+    return videos
+      .filter(video => userVideos.includes(video.id)) // Only render videos in user's video list
+      .map((video) => (
+        <TouchableOpacity key={video.id} onPress={() => handleVideoPress(video)}>
+          <View style={styles.videoContainer}>
+            <Video
+              source={{ uri: video.url }}
+              style={styles.media}
+              paused={false}
+              repeat={true}
+              controls={false}
+              resizeMode="cover"
+              onError={(e) => console.log(e)}
+            />
+          </View>
+        </TouchableOpacity>
+      ));
   };
 
   const handleVideoPress = (video) => {
