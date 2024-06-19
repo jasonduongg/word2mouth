@@ -103,7 +103,7 @@ const ProfileScreen = ({ userId, userData, onLogin }) => {
         <ScrollView style={styles.scroll}>
           <View style={styles.profileHeading}>
             <View style={styles.profilePicture}></View>
-            <Text style={styles.profileName}>{userProfileData.username}</Text>
+            <Text style={styles.profileName}>@{userProfileData.username}</Text>
             <View style={{ marginVertical: 10 }}>
               <ProfileData follower={userProfileData.followers} following={userProfileData.following} />
             </View>

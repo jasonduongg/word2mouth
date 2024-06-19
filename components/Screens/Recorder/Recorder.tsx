@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Dimensions, TextInput } from 'react-native';
-
 import Video from 'react-native-video';
 import { Video as VideoCompress } from 'react-native-compressor';
-
 import { launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'; // Import Firebase Storage features
+import { getStorage, ref, uploadBytesResumable } from 'firebase/storage'; // Import Firebase Storage features
 import { storage, firestore } from '../../config'; // Import your Firebase storage instance
-import { collection, addDoc, doc, setDoc} from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ userId }) => {
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [metadata, setMetadata] = useState({ description: '', likes: 0, comments: [], location: "", hashtags: ""});
-  const [finalizeStage, setFinalizeStage] = useState(false)
-  const [progressStage, setProgressStage] = useState(false)
-
+  const [metadata, setMetadata] = useState({ description: '', likes: 0, comments: [], location: '', hashtags: '', ownerId: userId});
+  const [finalizeStage, setFinalizeStage] = useState(false);
+  const [progressStage, setProgressStage] = useState(false);
 
   useEffect(() => {
     // console.log("selectedMedia changed:", selectedMedia);
@@ -30,7 +26,7 @@ const ProfileScreen = () => {
       },
       {
         text: 'Gallery',
-        onPress: () => openLibrary()
+        onPress: () => openLibrary(),
       },
     ]);
   }
@@ -46,39 +42,37 @@ const ProfileScreen = () => {
 
     launchImageLibrary(options, (response) => {
       if (!response.didCancel) {
-        setProgressStage(true)
+        setProgressStage(true);
         setSelectedMedia(response);
       }
     });
   };
-  
+
   const openCamera = () => {
     // Ongoing implementation for opening the camera
-  }
+  };
 
   const back = () => {
-    setProgressStage(false)
-    setSelectedMedia(null)
-  }
+    setProgressStage(false);
+    setSelectedMedia(null);
+  };
 
   const backfromFinal = () => {
-    setProgressStage(true)
-    setFinalizeStage(false)
-  }
+    setProgressStage(true);
+    setFinalizeStage(false);
+  };
 
   const uploadData = async () => {
     if (selectedMedia && selectedMedia.assets[0] && selectedMedia.assets[0].fileSize > 0) {
-      
       const filename = `${Date.now()}_${selectedMedia.assets[0].fileName}`;
       const fileUri = selectedMedia.assets[0].uri;
       const videoRef = ref(storage, `media/${filename}`);
       const blob = await new Promise((resolve, reject) => {
-      
-      const xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onload = function () {
           resolve(xhr.response);
         };
-        xhr.ontimeout = function (e) {    
+        xhr.ontimeout = function (e) {
           console.log(e);
         };
         xhr.onerror = function (e) {
@@ -90,39 +84,45 @@ const ProfileScreen = () => {
         xhr.timeout = 1000 * 60;
         xhr.send(null);
       });
-  
-      var uploadTask = uploadBytesResumable(videoRef, blob, metadata);
+
+      const uploadTask = uploadBytesResumable(videoRef, blob);
       uploadTask.then((snapshot) => {
-        // Handle successful uploads
         setMetadataInFirestore('metadata_collection', metadata, filename);
-        setFinalizeStage(false)
-        setProgressStage(false)
-        setSelectedMedia(null)
+        addVideoToUser(userId, filename);
+        setFinalizeStage(false);
+        setProgressStage(false);
+        setSelectedMedia(null);
         blob.close();
       }).catch((error) => {
         console.log(error);
-        // Handle unsuccessful uploads
         blob.close();
       });
-
     }
   };
-  
 
   const setMetadataInFirestore = async (collectionRef, metadata, filename) => {
-    console.log(collectionRef, metadata)
     try {
-      // Add metadata document to the Firestore collection
       await setDoc(doc(collection(firestore, collectionRef), filename), metadata);
       console.log('Metadata saved in Firestore');
     } catch (error) {
       console.error('Error saving metadata:', error);
-      throw error; // Throw the error to handle it in the calling function if needed
+      throw error;
     }
   };
 
+  const addVideoToUser = async (userId, filename) => {
+    try {
+      const userDocRef = doc(firestore, 'usersData', userId);
+      await updateDoc(userDocRef, {
+        posts: arrayUnion(filename)
+      });
+      console.log('Video added to user\'s video list');
+    } catch (error) {
+      console.error('Error adding video to user:', error);
+    }
+  };
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({ item }) => {
     return (
       <View>
         <View style={styles.mediaContainer}>
@@ -141,7 +141,6 @@ const ProfileScreen = () => {
   };
 
   const renderProgress = () => {
-    console.log(selectedMedia)
     return (
       selectedMedia && (
         <View>
@@ -163,7 +162,7 @@ const ProfileScreen = () => {
               </View>
             ) : selectedMedia.assets[0].type && selectedMedia.assets[0].type.startsWith('video') ? (
               <View>
-                {renderItem({ item: selectedMedia.assets[0].uri, index: 0 })}
+                {renderItem({ item: selectedMedia.assets[0].uri })}
                 <View style={styles.backOverlay}>
                   <SafeAreaView>
                     <TouchableOpacity onPress={() => back()}>
@@ -194,7 +193,7 @@ const ProfileScreen = () => {
       )
     );
   };
-  
+
   const renderFinalize = () => {
     return (
       <View>
@@ -206,7 +205,7 @@ const ProfileScreen = () => {
         <View style={styles.mediaContainer_final}>
           <Video
             resizeMode="cover"
-            source={{ uri: selectedMedia.assets[0].uri}}
+            source={{ uri: selectedMedia.assets[0].uri }}
             style={styles.media_final}
             paused={false}
             repeat={true}
@@ -240,14 +239,10 @@ const ProfileScreen = () => {
             <Text style={styles.text}>Post</Text>
           </TouchableOpacity>
         </View>
-
       </View>
     );
-    
   };
-  
-  
-  
+
   return (
     <View style={styles.container}>
       {!selectedMedia && (
@@ -272,16 +267,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    width: Dimensions.get('window').width * 1,
-    height: Dimensions.get('window').height * 1,
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
   },
   text: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333'
+    color: '#333',
   },
   mediaContainer: {
-    width: Dimensions.get('window').width * 1,
+    width: Dimensions.get('window').width,
     height: Dimensions.get('window').height * 0.92,
     backgroundColor: '#ddd',
     justifyContent: 'center',
@@ -299,15 +294,12 @@ const styles = StyleSheet.create({
     marginVertical: 1,
     width: '100%',
   },
-  restaurant: {
-
-  },
   backOverlay: {
     position: 'absolute',
   },
   backButton: {
     width: Dimensions.get('window').width * 0.1,
-    margin: 10
+    margin: 10,
   },
   icon: {
     width: 30,
@@ -315,7 +307,7 @@ const styles = StyleSheet.create({
   },
   proceed: {
     justifyContent: 'center',
-    flexDirection: 'row', 
+    flexDirection: 'row',
     position: 'absolute',
     left: 0,
     bottom: 0,
@@ -324,20 +316,18 @@ const styles = StyleSheet.create({
   },
   proceedButtons: {
     width: Dimensions.get('window').width * 0.45,
-    backgroundColor: "white",
+    backgroundColor: 'white',
     marginHorizontal: 5,
     padding: 10,
     borderRadius: 10,
-  
   },
-
   mediaContainer_final: {
     marginTop: 5,
-    width: Dimensions.get('window').width * 1,
+    width: Dimensions.get('window').width,
     height: Dimensions.get('window').width * 0.35,
     backgroundColor: 'red',
     justifyContent: 'center',
-    paddingLeft: 25
+    paddingLeft: 25,
   },
   media_final: {
     width: '35%',

@@ -1,5 +1,3 @@
-// App.js
-
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -12,6 +10,7 @@ import ProfileScreen from './components/Screens/Profile/Profile.tsx';
 import SignInScreen from './components/Screens/SignIn/SignIn.tsx'; // Assuming SignInScreen handles authentication
 import EnterPhoneNumberScreen from './components/PhoneLoginFlow/EnterPhoneNumber.tsx'; // Phone number verification screen
 import EnterVerificationCodeScreen from './components/PhoneLoginFlow/EnterVerificationCode.tsx'; // Verification code screen
+import SetupProfileScreen from './components/PhoneLoginFlow/SetupProfile.tsx'; // Profile setup screen
 
 import NavigationBar from './components/NavigationBar/NavigationBar.tsx';
 import { firestore } from './components/config.jsx'; // Adjust the path as needed
@@ -23,6 +22,7 @@ const App = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [profileSetupRequired, setProfileSetupRequired] = useState(false);
 
   const handleLogin = async (isAuthenticated, uid = null) => {
     setLoggedIn(isAuthenticated);
@@ -30,6 +30,9 @@ const App = () => {
     if (uid) {
       const data = await handleUserData(uid);
       setUserData(data);
+      if (!data.profileSetupComplete) {
+        setProfileSetupRequired(true);
+      }
     }
   };
 
@@ -38,17 +41,15 @@ const App = () => {
     const userSnapshot = await getDoc(userDocRef);
 
     if (!userSnapshot.exists()) {
-      const newUserdata = {
-        createdAt: new Date(),
-        username: "iamsaerom",
-        followers: 0,
-        following: 10
-        // Add other default user data here
-      };
-      await setDoc(userDocRef, newUserdata);
-      return newUserdata;
+      setProfileSetupRequired(true);
+      return { profileSetupComplete: false }; // Return a flag indicating setup is needed
     }
     return userSnapshot.data();
+  };
+
+  const handleProfileSetupComplete = (newUserData) => {
+    setUserData(newUserData);
+    setProfileSetupRequired(false);
   };
 
   return (
@@ -57,14 +58,24 @@ const App = () => {
         <View style={styles.container}>
           {loggedIn ? (
             <View style={styles.container}>
-              <Stack.Navigator initialRouteName="Home">
-                <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
-                <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
-                <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }} component={RecordScreen} />
-                <Stack.Screen name="Profile" options={{ headerShown: false, animation: "none" }}>
-                  {props => <ProfileScreen {...props} userId={userId} userData={userData} onLogin={handleLogin} />}
-                </Stack.Screen>
-              </Stack.Navigator>
+              {profileSetupRequired ? (
+                <Stack.Navigator initialRouteName="SetupProfile">
+                  <Stack.Screen name="SetupProfile" options={{ headerShown: false }}>
+                    {props => <SetupProfileScreen {...props} userId={userId} onProfileSetupComplete={handleProfileSetupComplete} />}
+                  </Stack.Screen>
+                </Stack.Navigator>
+              ) : (
+                <Stack.Navigator initialRouteName="Home">
+                  <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
+                  <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
+                  <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }}>
+                    {props => <RecordScreen {...props} userId={userId}  />}
+                  </Stack.Screen>
+                  <Stack.Screen name="Profile" options={{ headerShown: false, animation: "none" }}>
+                    {props => <ProfileScreen {...props} userId={userId} userData={userData} onLogin={handleLogin} />}
+                  </Stack.Screen>
+                </Stack.Navigator>
+              )}
               <NavigationBar />
             </View>
           ) : (
