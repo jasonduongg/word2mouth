@@ -1,26 +1,31 @@
 #import "AppDelegate.h"
 #import <Firebase.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTRootView.h>
+#import <GoogleMaps/GoogleMaps.h>
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [FIRApp configure];
-    
-    self.moduleName = @"AwesomeProject";
-    // You can add your custom initial props in the dictionary below.
-    // They will be passed down to the ViewController used by React Native.
-    self.initialProps = @{};
+    [GMSServices provideAPIKey:@"AIzaSyB0FhdkAyU8GP0w2NdLiz9w5u0xzGVCAyw"];  // Add your Google Maps API Key here
 
-    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+    RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+    RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
+                                                     moduleName:@"AwesomeProject"
+                                              initialProperties:nil];
+
+    rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
+
+    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    UIViewController *rootViewController = [UIViewController new];
+    rootViewController.view = rootView;
+    self.window.rootViewController = rootViewController;
+    [self.window makeKeyAndVisible];
+    return YES;
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
-{
-    return [self bundleURL];
-}
-
-- (NSURL *)bundleURL
 {
 #if DEBUG
     return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
@@ -30,3 +35,5 @@
 }
 
 @end
+
+

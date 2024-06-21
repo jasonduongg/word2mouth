@@ -8,6 +8,7 @@ import RecordScreen from './components/Screens/Recorder/Recorder';
 import SearchScreen from './components/Screens/Search/Search';
 import ProfileScreen from './components/Screens/Profile/Profile';
 import OtherProfile from './components/OtherProfile/OtherProfile';
+import MapScreen from './components/Screens/Map/Map'
 import SignInScreen from './components/Screens/SignIn/SignIn'; // Assuming SignInScreen handles authentication
 import EnterPhoneNumberScreen from './components/PhoneLoginFlow/EnterPhoneNumber'; // Phone number verification screen
 import EnterVerificationCodeScreen from './components/PhoneLoginFlow/EnterVerificationCode'; // Verification code screen
@@ -69,6 +70,7 @@ const App = () => {
                 <Stack.Navigator initialRouteName="Home">
                   <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
                   <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
+                  <Stack.Screen name="Map" options={{ headerShown: false, animation: "none" }} component={MapScreen} />
                   <Stack.Screen name="OtherProfile" options={{ headerShown: false, animation: "none" }} component={OtherProfile} />
                   <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }}>
                     {props => <RecordScreen {...props} userId={userId} />}

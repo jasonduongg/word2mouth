@@ -20,6 +20,9 @@ const NavigationBar = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
         <Image source={require('./icons/profile.png')} style={styles.icon} />
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Map')}>
+        <Image source={require('./icons/profile.png')} style={styles.icon} />
+      </TouchableOpacity>
     </View>
   );
 };
