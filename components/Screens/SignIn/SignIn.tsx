@@ -1,10 +1,11 @@
-// SignInScreen.js
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Dimensions } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useNavigation } from '@react-navigation/native';
+import Video from 'react-native-video';
+
+const { width, height } = Dimensions.get('window');
 
 const SignInScreen = ({ onLogin }) => {
   const navigation = useNavigation();
@@ -73,58 +74,94 @@ const SignInScreen = ({ onLogin }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Login to W2M</Text>
-      {!confirmation ? (
-        <View>
-          <TouchableOpacity onPress={navigateToPhoneNumberInput}>
-            <View style={styles.button}>
-              <Text>Login with Phone Number</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={googleLogin}>
-            <View style={styles.button}>
-              <Text>Login with Google</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter verification code"
-            value={code}
-            onChangeText={setCode}
-            keyboardType="numeric"
-          />
-          <Button
-            title="Verify Code"
-            onPress={confirmCode}
-          />
-        </View>
-      )}
+      <Video
+        source={require('../../../assets/videos/login.mp4')} // Ensure the path is correct
+        style = {styles.video}
+        repeat={true}
+        resizeMode="cover"
+        muted={true}
+      />
+      <View style={styles.overlay}>
+        {!confirmation ? (
+          <View style={styles.uiContainer}>
+            <Text style={styles.text}>Login to W2M</Text>
+            <TouchableOpacity onPress={(() => {})}>
+              <View style={styles.button}>
+                <Text>Email (Coming Soon)</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={navigateToPhoneNumberInput}>
+              <View style={styles.button}>
+                <Text>Phone Number</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={googleLogin}>
+              <View style={styles.button}>
+                <Text>Google</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter verification code"
+              value={code}
+              onChangeText={setCode}
+              keyboardType="numeric"
+            />
+            <Button
+              title="Verify Code"
+              onPress={confirmCode}
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+  },
+  video: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    flex: 1,
+    height: height,
+    width: width,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay
+  },
+  uiContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+    fontWeight: 'semibold',
+    color: '#fff',
+    marginBottom: 5,
+  },
+  button: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    width: width * 0.5,
+    height: 35,
+    marginTop: 5,
+    marginBottom: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent button background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ptext: {
+    color: "white"
   },
   input: {
     width: '80%',
@@ -133,6 +170,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+    backgroundColor: 'white',
   },
 });
 

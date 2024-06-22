@@ -11,16 +11,16 @@ const NavigationBar = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Image source={require('./icons/home.png')} style={styles.icon} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-        <Image source={require('./icons/search.png')} style={styles.icon} />
+      <TouchableOpacity onPress={() => navigation.navigate('Map')}>
+        <Image source={require('./icons/location.png')} style={styles.icon} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Record')}>
         <Image source={require('./icons/record.png')} style={styles.icon} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-        <Image source={require('./icons/profile.png')} style={styles.icon} />
+      <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+        <Image source={require('./icons/search.png')} style={styles.icon} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Map')}>
+      <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
         <Image source={require('./icons/profile.png')} style={styles.icon} />
       </TouchableOpacity>
     </View>
