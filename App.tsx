@@ -70,7 +70,11 @@ const App = () => {
                 <Stack.Navigator initialRouteName="Home">
                   <Stack.Screen name="Home" options={{ headerShown: false, animation: "none" }} component={ScrollerScreen} />
                   <Stack.Screen name="Search" options={{ headerShown: false, animation: "none" }} component={SearchScreen} />
+
+                  {/* MapScreen */}
                   <Stack.Screen name="Map" options={{ headerShown: false, animation: "none" }} component={MapScreen} />
+
+
                   <Stack.Screen name="OtherProfile" options={{ headerShown: false, animation: "none" }} component={OtherProfile} />
                   <Stack.Screen name="Record" options={{ headerShown: false, animation: "none" }}>
                     {props => <RecordScreen {...props} userId={userId} />}
